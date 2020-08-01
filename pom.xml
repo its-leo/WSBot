@@ -21,13 +21,13 @@
     </build>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/com.typesafe.play/play-json
-        <dependency>
-            <groupId>com.typesafe.play</groupId>
-            <artifactId>play-json_2.13</artifactId>
-            <version>2.9.0</version>
-        </dependency>
-    -->
+
+<!--        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-nop</artifactId>
+            <version>1.7.26</version>
+        </dependency>-->
+
         <dependency>
             <groupId>com.yahoofinance-api</groupId>
             <artifactId>YahooFinanceAPI</artifactId>
@@ -45,11 +45,6 @@
             <artifactId>slick_2.12</artifactId>
             <version>3.3.1</version>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-nop</artifactId>
-            <version>1.7.26</version>
-        </dependency>
 
         <dependency>
             <groupId>com.typesafe.slick</groupId>
@@ -57,14 +52,17 @@
             <version>3.3.1</version>
         </dependency>
 
-        <!--
-                <dependency>
-                    <groupId>pl.zankowski</groupId>
-                    <artifactId>iextrading4j-all</artifactId>
-                    <version>3.3.3</version>
-                </dependency>
-        -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.3</version>
+        </dependency>
 
+        <dependency>
+            <groupId>com.typesafe.scala-logging</groupId>
+            <artifactId>scala-logging_2.12</artifactId>
+            <version>3.9.2</version>
+        </dependency>
 
     </dependencies>
 </project>

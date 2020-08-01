@@ -1,10 +1,11 @@
+import com.typesafe.scalalogging.LazyLogging
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.Await
 import scala.concurrent.duration.{Duration, DurationInt}
 
-object InitDatabase extends App {
+object InitDatabase extends App with LazyLogging {
 
   val db = Database.forConfig("h2file1")
   try {
@@ -20,7 +21,7 @@ object InitDatabase extends App {
     Await.result(db.run(setupAction), Duration.Inf)
 
     val tables = Await.result(db.run(MTable.getTables), 1.seconds).toList
-    println("Tables: " + tables.map(_.name.name).mkString(", "))
+    logger.info("Tables: " + tables.map(_.name.name).mkString(", "))
 
   } finally db.close
 

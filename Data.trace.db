@@ -1,0 +1,4 @@
+2020-08-01 18:38:24 jdbc[4]: exception
+org.h2.jdbc.JdbcSQLException: Tabelle "Stocks" nicht gefunden
+Table "Stocks" not found; SQL statement:
+delete from "Stocks" [42102-190]

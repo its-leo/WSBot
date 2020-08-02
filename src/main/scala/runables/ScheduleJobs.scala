@@ -45,6 +45,4 @@ object ScheduleJobs extends App with LazyLogging {
 
   val nasdaqSchedule = system.scheduler.schedule(0 seconds, nasdaqFetchInterval.days)(nasdaqRunnable.run)
 
-  //----------------------------------------------------
-  logger.info("Started schedule jobs")
 }

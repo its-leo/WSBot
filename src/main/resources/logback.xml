@@ -11,6 +11,9 @@
     <logger name="slick.jdbc.StatementInvoker" level="DEBUG"/>
     <logger name="slick.basic.BasicBackend" level="DEBUG"/>
 
+    <logger name="org.quartz.impl" level="WARN"/>
+    <logger name="org.quartz.simpl" level="WARN"/>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>

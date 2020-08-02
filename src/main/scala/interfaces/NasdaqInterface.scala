@@ -20,15 +20,14 @@ class NasdaqInterface extends LazyLogging {
 
   private val nasdaqPath = Paths.get(config.getString("nasdaq.filePath"))
   private val nasdaqUrl = new URL(config.getString("nasdaq.url"))
-  private val maxFileAgeInDays = config.getInt("nasdaq.maxFileAgeInDays")
+  private val fetchIntervalInDays = config.getInt("nasdaq.fetchIntervalInDays")
 
   def fetchSymbols = {
-
     val fileExists = nasdaqPath.toFile.exists
     lazy val fileLastModified = Files.getLastModifiedTime(nasdaqPath).toInstant
     lazy val fileAgeInDays = java.time.Duration.between(fileLastModified, Clock.systemDefaultZone.instant).toDays
 
-    val fileContents = if (!fileExists || fileAgeInDays > maxFileAgeInDays) {
+    val fileContents = if (!fileExists || fileAgeInDays >= fetchIntervalInDays) {
       val lines = Source.fromURL(nasdaqUrl).getLines.toSeq
       Files.write(nasdaqPath, lines.mkString("\n").getBytes(StandardCharsets.UTF_8))
       logger.info(s"Fetched Nasdaq data from $nasdaqUrl")

@@ -8,7 +8,7 @@ import slick.lifted.ForeignKeyQuery
 //------------------------------------------------
 case class Quote(id: Option[Long], stockId: String, lastTrade: Timestamp, price: BigDecimal, avgPrice50: BigDecimal, volume: Long, avgVolume: Long)
 
-class Quotes(tag: Tag) extends Table[Quote](tag, "Interfaces.Quotes") {
+class Quotes(tag: Tag) extends Table[Quote](tag, "Quotes") {
 
   def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
@@ -35,7 +35,7 @@ class Quotes(tag: Tag) extends Table[Quote](tag, "Interfaces.Quotes") {
 
 case class Stock(id: String, name: String, place: String, symbol: String, category: String, etf: Boolean)
 
-class Stocks(tag: Tag) extends Table[Stock](tag, "Interfaces.Stocks") {
+class Stocks(tag: Tag) extends Table[Stock](tag, "Stocks") {
 
   def id = column[String]("id", O.PrimaryKey)
 

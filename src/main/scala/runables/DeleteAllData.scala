@@ -1,6 +1,6 @@
 package runables
 
-import akka.actor.TypedActor.dispatcher
+import scala.concurrent.ExecutionContext.Implicits.global
 import com.typesafe.scalalogging.LazyLogging
 import persistence.{Quotes, Stocks}
 import slick.jdbc.H2Profile.api._

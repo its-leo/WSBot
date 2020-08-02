@@ -1,4 +1,4 @@
-package runnables
+package runables
 
 import com.typesafe.scalalogging.LazyLogging
 import persistence.{Quotes, Stocks}

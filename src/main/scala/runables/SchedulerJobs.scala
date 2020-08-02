@@ -1,4 +1,4 @@
-package runnables
+package runables
 
 import java.time.temporal.ChronoUnit
 import java.time.{LocalDateTime, ZoneId}

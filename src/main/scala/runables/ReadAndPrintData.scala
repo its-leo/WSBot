@@ -1,4 +1,4 @@
-package runnables
+package runables
 
 import interfaces.Stocks
 import akka.actor.TypedActor.dispatcher

@@ -1,4 +1,4 @@
-package runnables
+package runables
 
 import akka.actor.TypedActor.dispatcher
 import com.typesafe.scalalogging.LazyLogging

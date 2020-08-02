@@ -64,5 +64,19 @@
             <version>3.9.2</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor_2.12</artifactId>
+            <version>2.5.23</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.enragedginger</groupId>
+            <artifactId>akka-quartz-scheduler_2.12</artifactId>
+            <version>1.6.1-akka-2.5.x</version>
+        </dependency>
+
+
+
     </dependencies>
 </project>

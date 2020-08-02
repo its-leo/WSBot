@@ -1,4 +1,7 @@
+package runnables
+
 import com.typesafe.scalalogging.LazyLogging
+import persistence.{Quotes, Stocks}
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.meta.MTable
 
@@ -8,6 +11,7 @@ import scala.concurrent.duration.{Duration, DurationInt}
 object InitDatabase extends App with LazyLogging {
 
   val db = Database.forConfig("h2file1")
+
   try {
 
     val quotes = TableQuery[Quotes]

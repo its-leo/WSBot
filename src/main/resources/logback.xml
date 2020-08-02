@@ -8,11 +8,11 @@
         </encoder>
     </appender>
 
-
     <logger name="slick.jdbc.StatementInvoker" level="DEBUG"/>
     <logger name="slick.basic.BasicBackend" level="DEBUG"/>
 
     <root level="INFO">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="STDOUT"/>
     </root>
+
 </configuration>

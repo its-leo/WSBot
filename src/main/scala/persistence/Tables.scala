@@ -1,16 +1,20 @@
+package persistence
+
+import java.sql.Timestamp
+
 import slick.jdbc.H2Profile.api._
 import slick.lifted.ForeignKeyQuery
 
 //------------------------------------------------
-case class Quote(id: Option[Long], companyId: String, timestamp: String, price: BigDecimal, avgPrice50: BigDecimal, volume: Long, avgVolume: Long)
+case class Quote(id: Option[Long], stockId: String, lastTrade: Timestamp, price: BigDecimal, avgPrice50: BigDecimal, volume: Long, avgVolume: Long)
 
-class Quotes(tag: Tag) extends Table[Quote](tag, "Quotes") {
+class Quotes(tag: Tag) extends Table[Quote](tag, "Interfaces.Quotes") {
 
   def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
   def stockId = column[String]("stockId")
 
-  def timestamp = column[String]("timestamp")
+  def lastTrade = column[Timestamp]("lastTrade")
 
   def price = column[BigDecimal]("price")
 
@@ -20,7 +24,7 @@ class Quotes(tag: Tag) extends Table[Quote](tag, "Quotes") {
 
   def avgVolume = column[Long]("avgVolume")
 
-  def * = (id.?, stockId, timestamp, price, avgPrice50, volume, avgVolume) <> (Quote.tupled, Quote.unapply)
+  def * = (id.?, stockId, lastTrade, price, avgPrice50, volume, avgVolume) <> (Quote.tupled, Quote.unapply)
 
   //A reified foreign key relation that can be navigated to create a join
   def stock: ForeignKeyQuery[Stocks, Stock] = foreignKey("stock_fk", stockId, TableQuery[Stocks])(_.id)
@@ -31,7 +35,7 @@ class Quotes(tag: Tag) extends Table[Quote](tag, "Quotes") {
 
 case class Stock(id: String, name: String, place: String, symbol: String, category: String, etf: Boolean)
 
-class Stocks(tag: Tag) extends Table[Stock](tag, "Stocks") {
+class Stocks(tag: Tag) extends Table[Stock](tag, "Interfaces.Stocks") {
 
   def id = column[String]("id", O.PrimaryKey)
 

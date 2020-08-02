@@ -46,12 +46,10 @@ class NasdaqInterface extends LazyLogging {
     try {
       val stocks = TableQuery[Stocks]
 
-      val deleteStocksAction = db.run(stocks.delete).map(numDeletedRows => logger.debug(s"Deleted $numDeletedRows Interfaces.Stocks"))
+      val deleteStocksAction = db.run(stocks.delete).map(numDeletedRows => logger.debug(s"Deleted $numDeletedRows Stocks"))
       Await.result(deleteStocksAction, 1.seconds)
 
-      val loadStocksAction = db.run(stocks ++= stocksData).map(a => logger.info(s"Loaded ${
-        a.get
-      } Interfaces.Stocks"))
+      val loadStocksAction = db.run(stocks ++= stocksData).map(a => logger.info(s"Loaded ${a.get} Stocks"))
       Await.result(loadStocksAction, Duration.Inf)
 
     } finally db.close

@@ -34,24 +34,28 @@
             <version>3.15.0</version>
         </dependency>
 
-        <dependency>
+<!--        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.4.190</version>
             <scope>runtime</scope>
-        </dependency>
+        </dependency>-->
+
+        <!--#####################################################################-->
+
         <dependency>
-            <groupId>com.typesafe.slick</groupId>
-            <artifactId>slick_2.12</artifactId>
-            <version>3.3.1</version>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.5</version>
         </dependency>
 
         <dependency>
-            <groupId>com.typesafe.slick</groupId>
-            <artifactId>slick-hikaricp_2.12</artifactId>
-            <version>3.3.1</version>
+            <groupId>com.github.tminglei</groupId>
+            <artifactId>slick-pg_2.12</artifactId>
+            <version>0.19.1</version>
         </dependency>
 
+        <!--#####################################################################-->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
@@ -64,6 +68,22 @@
             <version>3.9.2</version>
         </dependency>
 
+        <!--#####################################################################-->
+
+        <dependency>
+            <groupId>com.typesafe.slick</groupId>
+            <artifactId>slick_2.12</artifactId>
+            <version>3.3.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.typesafe.slick</groupId>
+            <artifactId>slick-hikaricp_2.12</artifactId>
+            <version>3.3.1</version>
+        </dependency>
+
+        <!--#####################################################################-->
+
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-actor_2.12</artifactId>
@@ -75,8 +95,6 @@
             <artifactId>akka-quartz-scheduler_2.12</artifactId>
             <version>1.6.1-akka-2.5.x</version>
         </dependency>
-
-
 
     </dependencies>
 </project>

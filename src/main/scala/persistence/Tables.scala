@@ -1,54 +1,78 @@
 package persistence
 
-import java.sql.Timestamp
+import java.time.ZonedDateTime
 
-import slick.jdbc.H2Profile.api._
+import com.github.tminglei.slickpg._
+import slick.basic.Capability
+import slick.driver.JdbcProfile
 import slick.lifted.ForeignKeyQuery
 
-//------------------------------------------------
-case class Quote(id: Option[Long], stockId: String, lastTrade: Timestamp, price: BigDecimal, avgPrice50: BigDecimal, volume: Long, avgVolume: Long)
+trait MyPostgresProfile extends ExPostgresProfile with PgArraySupport {
 
-class Quotes(tag: Tag) extends Table[Quote](tag, "Quotes") {
+  override val api = MyAPI
 
-  def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+  object MyAPI extends API with ArrayImplicits
 
-  def stockId = column[String]("stockId")
 
-  def lastTrade = column[Timestamp]("lastTrade")
-
-  def price = column[BigDecimal]("price")
-
-  def avgPrice50 = column[BigDecimal]("avgPrice50")
-
-  def volume = column[Long]("volume")
-
-  def avgVolume = column[Long]("avgVolume")
-
-  def * = (id.?, stockId, lastTrade, price, avgPrice50, volume, avgVolume) <> (Quote.tupled, Quote.unapply)
-
-  //A reified foreign key relation that can be navigated to create a join
-  def stock: ForeignKeyQuery[Stocks, Stock] = foreignKey("stock_fk", stockId, TableQuery[Stocks])(_.id)
+  override protected def computeCapabilities: Set[Capability] = super.computeCapabilities + slick.jdbc.JdbcCapabilities.insertOrUpdate
 
 }
 
-//------------------------------------------------
+object MyPostgresProfile extends MyPostgresProfile
 
-case class Stock(id: String, name: String, place: String, symbol: String, category: String, etf: Boolean)
 
-class Stocks(tag: Tag) extends Table[Stock](tag, "Stocks") {
+import persistence.MyPostgresProfile.api._
 
-  def id = column[String]("id", O.PrimaryKey)
+object Tables {
 
-  def name = column[String]("name")
+  //------------------------------------------------
+  case class Quote(id: Option[Long], stockId: String, lastTrade: ZonedDateTime, price: BigDecimal, avgPrice50: BigDecimal, volume: Long, avgVolume: Long)
 
-  def place = column[String]("place")
+  class Quotes(tag: Tag) extends Table[Quote](tag, "Quotes") {
 
-  def symbol = column[String]("symbol")
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
-  def category = column[String]("category")
+    def stockId = column[String]("stockId")
 
-  def etf = column[Boolean]("etf")
+    def lastTrade = column[ZonedDateTime]("lastTrade")
 
-  def * = (id, name, place, symbol, category, etf) <> (Stock.tupled, Stock.unapply)
+    def price = column[BigDecimal]("price")
+
+    def avgPrice50 = column[BigDecimal]("avgPrice50")
+
+    def volume = column[Long]("volume")
+
+    def avgVolume = column[Long]("avgVolume")
+
+    override def * = (id.?, stockId, lastTrade, price, avgPrice50, volume, avgVolume) <> ((Quote.apply _).tupled, Quote.unapply)
+
+    def uniqueQuote = index("unique_quote", (stockId, lastTrade), unique = true)
+
+    //A reified foreign key relation that can be navigated to create a join
+    def stock: ForeignKeyQuery[Stocks, Stock] = foreignKey("stock_fk", stockId, TableQuery[Stocks])(_.id)
+
+  }
+
+  //------------------------------------------------
+
+  case class Stock(id: String, name: String, place: String, symbol: String, category: String, etf: Boolean)
+
+  class Stocks(tag: Tag) extends Table[Stock](tag, "Stocks") {
+
+    def id = column[String]("id", O.PrimaryKey)
+
+    def name = column[String]("name")
+
+    def place = column[String]("place")
+
+    def symbol = column[String]("symbol")
+
+    def category = column[String]("category")
+
+    def etf = column[Boolean]("etf")
+
+    def * = (id, name, place, symbol, category, etf) <> (Stock.tupled, Stock.unapply)
+
+  }
 
 }

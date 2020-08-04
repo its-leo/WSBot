@@ -1,7 +1,7 @@
 package runables
 
 import com.typesafe.scalalogging.LazyLogging
-import persistence.{Quotes, Stocks}
+import persistence.Tables._
 import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.Await
@@ -10,12 +10,12 @@ import scala.concurrent.duration.Duration
 
 object ReadAndPrintData extends App with LazyLogging {
 
-  val db = Database.forConfig("h2file1")
+  val db = Database.forConfig("db")
 
   try {
 
     val quotes = TableQuery[Quotes]
-    //val f = db.run(quotes.result.map(a => logger.info(s"${a.size} Interfaces.Quotes:\n${a.mkString("\n")}")))
+    val fu = db.run(quotes.result.map(a => logger.info(s"${a.size} Quotes:\n${a.mkString("\n")}")))
     val f = db.run(quotes.result.map(a => logger.debug(s"${a.size} Quotes")))
     Await.result(f, Duration.Inf)
 

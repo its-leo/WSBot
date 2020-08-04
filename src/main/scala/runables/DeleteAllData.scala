@@ -2,7 +2,7 @@ package runables
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.typesafe.scalalogging.LazyLogging
-import persistence.{Quotes, Stocks}
+import persistence.Tables._
 import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.Await
@@ -11,7 +11,7 @@ import scala.concurrent.duration.Duration
 
 object DeleteAllData extends App with LazyLogging {
 
-  val db = Database.forConfig("h2file1")
+  val db = Database.forConfig("db")
 
   val tables = Set(TableQuery[Quotes], TableQuery[Stocks])
 

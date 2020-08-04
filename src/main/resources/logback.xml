@@ -8,11 +8,20 @@
         </encoder>
     </appender>
 
+<!--
     <logger name="slick.jdbc.StatementInvoker" level="DEBUG"/>
     <logger name="slick.basic.BasicBackend" level="DEBUG"/>
+-->
 
     <logger name="org.quartz.impl" level="WARN"/>
     <logger name="org.quartz.simpl" level="WARN"/>
+
+    <logger name="yahoofinance.quotes.query1v7.QuotesRequest" level="WARN"/>
+    <logger name="persistence.MyPostgresProfile" level="WARN"/>
+
+    <logger name="com.zaxxer.hikari.HikariDataSource" level="WARN"/>
+
+
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>

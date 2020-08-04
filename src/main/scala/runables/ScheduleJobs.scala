@@ -1,7 +1,8 @@
 package runables
 
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.time.{Duration, LocalDateTime, ZoneId}
+import java.time.{Clock, Duration, LocalDateTime, ZoneId, ZonedDateTime}
 import java.util.{Date, TimeZone}
 
 import akka.actor.ActorSystem
@@ -36,14 +37,22 @@ object ScheduleJobs extends App with LazyLogging {
   //quartz.schedule("nasdaqFromYahoo", yahooInterfaceActor, Param(yahooInterface, "nasdaq"), startDateOption)
 
 
+  val timezone = TimeZone.getTimeZone(config.getString("nasdaq.timezone"))
   val tradingDays = config.getString("nasdaq.tradingDays")
   val tradingHours = config.getString("nasdaq.tradingHours")
-  val timeToleranceInSeconds = config.getInt("timeToleranceInSeconds")
-  val timezone = TimeZone.getTimeZone(config.getString("nasdaq.timezone"))
-  val expression = s"""${timeToleranceInSeconds} */$yahooFetchInterval $tradingHours ? * $tradingDays"""
 
-  //quartz.wait(waitingMillis)
-  quartz.rescheduleJob(
+  //Very ugly fix for daylight savings time. QuartzSchedulerExtension ignores it...
+  val dstAdapted = tradingHours.split("-").map(a => if (timezone.useDaylightTime) a.toInt - 1 else a).mkString("-")
+
+  val dateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy - HH:mm:ss VV")
+
+  val timeToleranceInSeconds = config.getInt("timeToleranceInSeconds")
+  val nowTime = Clock.systemUTC.instant.atZone(timezone.toZoneId)
+  logger.info("Current Nasdaq Time: " + dateFormat.format(nowTime))
+
+  val expression = s"""${timeToleranceInSeconds} */$yahooFetchInterval $dstAdapted ? * $tradingDays"""
+
+  val startDate = quartz.rescheduleJob(
     name = "nasdaqFromYahoo",
     receiver = yahooInterfaceActor,
     msg = Param(yahooInterface, "nasdaq"),
@@ -51,6 +60,9 @@ object ScheduleJobs extends App with LazyLogging {
     cronExpression = expression,
     calendar = None,
     timezone = timezone)
+
+  logger.info("Scheduler waits until " + dateFormat.format(ZonedDateTime.ofInstant(startDate.toInstant, ZoneId.systemDefault)))
+
 
   //----------------------------------------------------
   //Simple schedule using a runnable

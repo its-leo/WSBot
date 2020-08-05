@@ -1,9 +1,8 @@
 package runables
 
+import java.time._
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-import java.time.{Clock, Duration, LocalDateTime, ZoneId, ZonedDateTime}
-import java.util.{Date, TimeZone}
+import java.util.TimeZone
 
 import akka.actor.ActorSystem
 import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension
@@ -24,22 +23,13 @@ object ScheduleJobs extends App with LazyLogging {
   //----------------------------------------------------
   //Cron configured schedule, see application.conf
 
-  val yahooFetchInterval = config.getInt("yahoo.fetchIntervalInMinutes")
-
-  val now = LocalDateTime.now
-  val nextStartMinutes = (yahooFetchInterval * (now.getMinute / yahooFetchInterval) + yahooFetchInterval)
-  val nextStartTime = now.truncatedTo(ChronoUnit.HOURS).plusMinutes(nextStartMinutes)
-  val waitingMillis = Duration.between(now, nextStartTime).toMillis
-  val startDateOption = Option(Date.from(nextStartTime.atZone(ZoneId.systemDefault).toInstant))
-
   val yahooInterface = new YahooInterface
   val yahooInterfaceActor = system.actorOf(YahooInterfaceActor.props, "fetch")
-  //quartz.schedule("nasdaqFromYahoo", yahooInterfaceActor, Param(yahooInterface, "nasdaq"), startDateOption)
-
 
   val timezone = TimeZone.getTimeZone(config.getString("nasdaq.timezone"))
-  val tradingDays = config.getString("nasdaq.tradingDays")
+  val yahooFetchInterval = config.getInt("yahoo.fetchIntervalInMinutes")
   val tradingHours = config.getString("nasdaq.tradingHours")
+  val tradingDays = config.getString("nasdaq.tradingDays")
 
   //Very ugly fix for daylight savings time. QuartzSchedulerExtension ignores it...
   val dstAdapted = tradingHours.split("-").map(a => if (timezone.useDaylightTime) a.toInt - 1 else a).mkString("-")
@@ -61,8 +51,8 @@ object ScheduleJobs extends App with LazyLogging {
     calendar = None,
     timezone = timezone)
 
-  logger.info("Scheduler waits until " + dateFormat.format(ZonedDateTime.ofInstant(startDate.toInstant, ZoneId.systemDefault)))
-
+  val startDateLocal = ZonedDateTime.ofInstant(startDate.toInstant, ZoneId.systemDefault)
+  logger.info("Scheduler waits until " + dateFormat.format(startDateLocal))
 
   //----------------------------------------------------
   //Simple schedule using a runnable

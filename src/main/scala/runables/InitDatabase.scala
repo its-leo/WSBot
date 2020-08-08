@@ -11,7 +11,6 @@ object InitDatabase extends App with LazyLogging {
 
   val db = Database.forConfig("db")
 
-
   try {
     val quotes = TableQuery[Quotes]
     val stocks = TableQuery[Stocks]

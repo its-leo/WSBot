@@ -26,7 +26,7 @@ trait ExchangeInterface extends LazyLogging {
 
   def mapLinesToStocks(lines: Seq[String]): Seq[Stock]
 
-  def fetchInstruments = {
+  def fetchStocks = {
 
     val fileExists = path.toFile.exists
     lazy val fileLastModified = Files.getLastModifiedTime(path).toInstant

@@ -67,7 +67,7 @@ class ExchangeScheduler extends LazyLogging {
     val waitingInSeconds = (ChronoUnit.SECONDS.between(nowTime, startDateLocal) - fetchOffsetSeconds).seconds
 
     val exchangeDataRunnable = new Runnable {
-      override def run = exchangeInterface.fetchInstruments
+      override def run = exchangeInterface.fetchStocks
     }
 
     system.scheduler.schedule(waitingInSeconds, exchangeFetchIntervalInDays)(exchangeDataRunnable.run)

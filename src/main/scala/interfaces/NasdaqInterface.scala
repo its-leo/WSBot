@@ -17,5 +17,5 @@ class NasdaqInterface extends ExchangeInterface {
 object NasdaqInterface extends App {
   //DeleteAllData.deleteAllData
   val a = new NasdaqInterface
-  a.fetchInstruments
+  a.fetchStocks
 }

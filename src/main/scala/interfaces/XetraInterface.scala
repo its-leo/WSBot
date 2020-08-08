@@ -22,5 +22,5 @@ class XetraInterface extends ExchangeInterface {
 
 object XetraInterface extends App {
   val a = new XetraInterface
-  a.fetchInstruments
+  a.fetchStocks
 }

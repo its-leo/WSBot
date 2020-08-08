@@ -26,14 +26,15 @@ trait ExchangeInterface extends LazyLogging {
 
   def mapLinesToStocks(lines: Seq[String]): Seq[Stock]
 
-  def fetchStocks = {
+  def fetchStocks: Seq[Stock] = {
 
     val fileExists = path.toFile.exists
     lazy val fileLastModified = Files.getLastModifiedTime(path).toInstant
     lazy val fileAgeInDays = java.time.Duration.between(fileLastModified, Clock.systemDefaultZone.instant).toDays
 
     val fileContents = if (!fileExists || fileAgeInDays >= fetchIntervalInDays) {
-      val lines = Source.fromURL(url).getLines.toSeq
+      val source = Source.fromURL(url)
+      val lines =  try source.getLines.toSeq finally source.close
       Files.write(path, lines.mkString("\n").getBytes(StandardCharsets.UTF_8))
       logger.info(s"Fetched $exchangeName data from $url")
       lines

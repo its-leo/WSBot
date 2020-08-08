@@ -14,7 +14,7 @@ import interfaces.actors.YahooInterfaceActor
 import interfaces.actors.YahooInterfaceActor.Param
 import interfaces.traits.ExchangeInterface
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.concurrent.duration.{DurationInt, DurationLong}
 
 class ExchangeScheduler extends LazyLogging {
@@ -43,7 +43,7 @@ class ExchangeScheduler extends LazyLogging {
     val nowTime = Clock.systemUTC.instant.atZone(timezone.toZoneId)
     logger.info(s"Current $exchangeName time: " + dateFormat.format(nowTime))
 
-    val expression = s"""${fetchOffsetSeconds} */$yahooFetchInterval $tradingHours ? * $tradingDays"""
+    val expression = s"""$fetchOffsetSeconds */$yahooFetchInterval $tradingHours ? * $tradingDays"""
 
     val startDate = quartz.rescheduleJob(
       name = s"${exchangeName}FromYahoo",
@@ -60,17 +60,17 @@ class ExchangeScheduler extends LazyLogging {
 
     //----------------------------------------------------
 
-    implicit val ec = ExecutionContext.global
+    implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
     val exchangeFetchIntervalInDays = config.getInt(s"$exchangeName.fetchIntervalInDays").days
 
     val waitingInSeconds = (ChronoUnit.SECONDS.between(nowTime, startDateLocal) - fetchOffsetSeconds).seconds
 
     val exchangeDataRunnable = new Runnable {
-      override def run = exchangeInterface.fetchStocks
+      override def run(): Unit = exchangeInterface.fetchStocks
     }
 
-    system.scheduler.schedule(waitingInSeconds, exchangeFetchIntervalInDays)(exchangeDataRunnable.run)
+    system.scheduler.schedule(waitingInSeconds, exchangeFetchIntervalInDays)(exchangeDataRunnable.run())
 
   }
 }

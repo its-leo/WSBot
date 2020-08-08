@@ -17,11 +17,14 @@
     <logger name="org.quartz.simpl" level="WARN"/>
 
     <logger name="yahoofinance.quotes.query1v7.QuotesRequest" level="WARN"/>
-    <logger name="persistence.MyPostgresProfile" level="WARN"/>
+
+    <logger name="persistence.PostgresProfile$" level="WARN"/>
 
     <logger name="com.zaxxer.hikari.HikariDataSource" level="WARN"/>
 
+    <logger name="org.quartz.core" level="WARN"/>
 
+    <logger name="persistence.PostgresProfile" level="WARN"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>

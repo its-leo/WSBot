@@ -1,32 +1,29 @@
 package runables
 
 import com.typesafe.scalalogging.LazyLogging
-import persistence.Tables._
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.meta.MTable
+import persistence.PostgresProfile.api._
+import persistence.Tables.{Quotes, Stocks}
 
 import scala.concurrent.Await
-import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.duration.Duration
 
 object InitDatabase extends App with LazyLogging {
 
   val db = Database.forConfig("db")
 
+
   try {
-
     val quotes = TableQuery[Quotes]
-
     val stocks = TableQuery[Stocks]
 
-    val setupAction: DBIO[Unit] = DBIO.seq(
-      quotes.schema.createIfNotExists,
-      stocks.schema.createIfNotExists
+    val initAction = DBIO.seq(
+      quotes.schema.dropIfExists,
+      stocks.schema.dropIfExists,
+      stocks.schema.createIfNotExists,
+      quotes.schema.createIfNotExists
     )
 
-    Await.result(db.run(setupAction), Duration.Inf)
-
-    val tables = Await.result(db.run(MTable.getTables), 1.seconds).toList
-    logger.info("Tables: " + tables.map(_.name.name).mkString(", "))
+    Await.result(db.run(initAction), Duration.Inf)
 
   } finally db.close
 

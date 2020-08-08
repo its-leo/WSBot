@@ -2,35 +2,17 @@ package persistence
 
 import java.time.ZonedDateTime
 
-import com.github.tminglei.slickpg._
-import slick.basic.Capability
-import slick.driver.JdbcProfile
+import persistence.PostgresProfile.api._
 import slick.lifted.ForeignKeyQuery
-
-trait MyPostgresProfile extends ExPostgresProfile with PgArraySupport {
-
-  override val api = MyAPI
-
-  object MyAPI extends API with ArrayImplicits
-
-
-  override protected def computeCapabilities: Set[Capability] = super.computeCapabilities + slick.jdbc.JdbcCapabilities.insertOrUpdate
-
-}
-
-object MyPostgresProfile extends MyPostgresProfile
-
-
-import persistence.MyPostgresProfile.api._
 
 object Tables {
 
   //------------------------------------------------
-  case class Quote(id: Option[Long], stockId: String, lastTrade: ZonedDateTime, price: BigDecimal, avgPrice50: BigDecimal, volume: Long, avgVolume: Long)
+  case class Quote(stockId: String, lastTrade: ZonedDateTime, price: BigDecimal, avgPrice50: BigDecimal, volume: Long, avgVolume: Long)
 
   class Quotes(tag: Tag) extends Table[Quote](tag, "Quotes") {
 
-    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def pk = primaryKey("pk", (stockId, lastTrade))
 
     def stockId = column[String]("stockId")
 
@@ -44,9 +26,10 @@ object Tables {
 
     def avgVolume = column[Long]("avgVolume")
 
-    override def * = (id.?, stockId, lastTrade, price, avgPrice50, volume, avgVolume) <> ((Quote.apply _).tupled, Quote.unapply)
+    override def * = (stockId, lastTrade, price, avgPrice50, volume, avgVolume) <> ((Quote.apply _).tupled, Quote.unapply)
 
-    def uniqueQuote = index("unique_quote", (stockId, lastTrade), unique = true)
+    //def uniqueQuote = index("unique_quote", (stockId, lastTrade), unique = true)
+
 
     //A reified foreign key relation that can be navigated to create a join
     def stock: ForeignKeyQuery[Stocks, Stock] = foreignKey("stock_fk", stockId, TableQuery[Stocks])(_.id)
@@ -55,7 +38,7 @@ object Tables {
 
   //------------------------------------------------
 
-  case class Stock(id: String, name: String, place: String, symbol: String, category: String, etf: Boolean)
+  case class Stock(id: String, name: String, exchange: String, symbol: String, etf: Boolean)
 
   class Stocks(tag: Tag) extends Table[Stock](tag, "Stocks") {
 
@@ -63,15 +46,13 @@ object Tables {
 
     def name = column[String]("name")
 
-    def place = column[String]("place")
+    def exchange = column[String]("exchange")
 
     def symbol = column[String]("symbol")
 
-    def category = column[String]("category")
-
     def etf = column[Boolean]("etf")
 
-    def * = (id, name, place, symbol, category, etf) <> (Stock.tupled, Stock.unapply)
+    def * = (id, name, exchange, symbol, etf) <> (Stock.tupled, Stock.unapply)
 
   }
 

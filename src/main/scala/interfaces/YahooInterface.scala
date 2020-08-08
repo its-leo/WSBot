@@ -5,21 +5,19 @@ import java.time.{Clock, ZoneId}
 
 import com.typesafe.scalalogging.LazyLogging
 import helper.ConfigHelper.config
+import persistence.PostgresProfile.api._
 import persistence.Tables._
-import slick.jdbc.H2Profile.api._
 import yahoofinance.YahooFinance
 
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{Duration, MINUTES}
+import scala.concurrent.duration.Duration
 
 class YahooInterface extends LazyLogging {
 
   private val fetchLimit = config.getInt("yahoo.fetchLimit")
-  private val fetchIntervalInMinutes = config.getInt("yahoo.fetchIntervalInMinutes")
 
-  def fetchQuotes(place: String) = {
+  def fetchQuotes(exchangeName: String) = {
 
     val db = Database.forConfig("db")
 
@@ -27,11 +25,11 @@ class YahooInterface extends LazyLogging {
 
     try {
 
-      val allStocksQuery = TableQuery[Stocks].filter(_.place === place.toUpperCase).result
+      val allStocksQuery = TableQuery[Stocks].filter(_.exchange === exchangeName.toUpperCase).result
       val stocks = Await.result(db.run(allStocksQuery), Duration.Inf)
-      assume(!stocks.isEmpty, s"No stocks for ${place.toUpperCase} available.")
+      assume(!stocks.isEmpty, s"No stocks for ${exchangeName.toUpperCase} available.")
 
-      val timezone = config.getString(s"${place.toLowerCase}.timezone")
+      val timezone = config.getString(s"${exchangeName.toLowerCase}.timezone")
 
       val symbolsGrouped = stocks.map(_.symbol).grouped(fetchLimit)
 
@@ -40,24 +38,22 @@ class YahooInterface extends LazyLogging {
         val stockQuotes = YahooFinance.get(symbols.toArray).asScala.values.map(_.getQuote)
 
         stockQuotes.map { a =>
-          val stockId = s"${place.toUpperCase} : ${a.getSymbol}"
           val lastTrade = a.getLastTradeTime.toInstant.atZone(ZoneId.of(timezone))
           val priceAvg = Option(a.getPriceAvg50).getOrElse(new java.math.BigDecimal(-1))
-          Quote(None, stockId, lastTrade, a.getPrice, priceAvg, a.getVolume, a.getAvgVolume)
+          Quote(a.getSymbol, lastTrade, a.getPrice, priceAvg, a.getVolume, a.getAvgVolume)
         }
       }
 
+      val oldQuotesSize = Await.result(db.run(quotes.result), Duration.Inf).size
+
+      val updateQuery = quotes.insertOrUpdateAll(newQuotes)
+      val quotesSize = Await.result(db.run(updateQuery), Duration.Inf).getOrElse(0)
+
       val nowTime = Clock.systemUTC.instant.atZone(ZoneId.of(timezone))
-      val filteredQuotesData = newQuotes.filter { data =>
-        java.time.Duration.between(data.lastTrade, nowTime).toNanos < Duration(fetchIntervalInMinutes, MINUTES).toNanos
-      }
-
-      val updateQuery = (quotes ++= filteredQuotesData)
-
       val dateFormat = DateTimeFormatter.ofPattern("HH:mm:ss VV")
       val localTime = dateFormat.format(nowTime)
-      val updateAction = db.run(updateQuery.map(a => logger.info(f"Added ${a.get}%4s Quotes at $localTime")))
-      Await.result(updateAction, Duration.Inf)
+
+      logger.info(f"Added ${quotesSize - oldQuotesSize}%4s Quotes at $localTime")
 
     } finally db.close
 

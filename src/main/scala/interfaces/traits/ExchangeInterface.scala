@@ -34,8 +34,11 @@ trait ExchangeInterface extends LazyLogging {
 
     val fileContents = if (!fileExists || fileAgeInDays >= fetchIntervalInDays) {
       val source = Source.fromURL(url)
-      val lines =  try source.getLines.toSeq finally source.close
-      Files.write(path, lines.mkString("\n").getBytes(StandardCharsets.UTF_8))
+      val lines = try {
+        val sourceLines = source.getLines.toSeq
+        Files.write(path, sourceLines.mkString("\n").getBytes(StandardCharsets.UTF_8))
+        sourceLines
+      } finally source.close
       logger.info(s"Fetched $exchangeName data from $url")
       lines
     } else Files.readAllLines(path, StandardCharsets.UTF_8).asScala

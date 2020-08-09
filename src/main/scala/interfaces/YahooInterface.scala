@@ -1,7 +1,7 @@
 package interfaces
 
 import java.time.format.DateTimeFormatter
-import java.time.{Clock, ZoneId}
+import java.time.{Clock, ZoneId, ZonedDateTime}
 
 import com.typesafe.scalalogging.LazyLogging
 import helper.ConfigHelper.config
@@ -49,7 +49,7 @@ class YahooInterface extends LazyLogging {
       val updateQuery = quotes.insertOrUpdateAll(newQuotes)
       val quotesSize = Await.result(db.run(updateQuery), Duration.Inf).getOrElse(0)
 
-      val nowTime = Clock.systemUTC.instant.atZone(ZoneId.of(timezone))
+      val nowTime = ZonedDateTime.now(ZoneId.of(timezone))
       val dateFormat = DateTimeFormatter.ofPattern("HH:mm:ss VV")
       val localTime = dateFormat.format(nowTime)
 

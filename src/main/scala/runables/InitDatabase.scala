@@ -9,21 +9,26 @@ import scala.concurrent.duration.Duration
 
 object InitDatabase extends App with LazyLogging {
 
-  val db = Database.forConfig("db")
+  def init {
 
-  try {
-    val quotes = TableQuery[Quotes]
-    val stocks = TableQuery[Stocks]
+    val db = Database.forConfig("db")
 
-    val initAction = DBIO.seq(
-      quotes.schema.dropIfExists,
-      stocks.schema.dropIfExists,
-      stocks.schema.createIfNotExists,
-      quotes.schema.createIfNotExists
-    )
+    try {
+      val quotes = TableQuery[Quotes]
+      val stocks = TableQuery[Stocks]
 
-    Await.result(db.run(initAction), Duration.Inf)
+      val initAction = DBIO.seq(
+        quotes.schema.dropIfExists,
+        stocks.schema.dropIfExists,
+        stocks.schema.createIfNotExists,
+        quotes.schema.createIfNotExists
+      )
 
-  } finally db.close
+      Await.result(db.run(initAction), Duration.Inf)
+
+    } finally db.close
+  }
+
+  init
 
 }

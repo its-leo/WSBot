@@ -1,7 +1,7 @@
 package helper
 
 import com.github.nscala_time.time.Imports._
-import jline.{TerminalFactory}
+import jline.TerminalFactory
 
 /**
  * Credits to:
@@ -22,7 +22,7 @@ import Units._
  *  to mock the tty in the tests(i.e: override `print(...)`)
  */
 trait Output {
-  def print(s: String) = Console.print(s)
+  def print(s: String): Unit = Console.print(s)
 }
 
 object ProgressBar {
@@ -44,7 +44,7 @@ object ProgressBar {
  *  create a new ProgressBar with default configuration.
  */
 class ProgressBar(_total: Int) extends Output {
-  val total = _total
+  val total: Int = _total
   var current = 0
   private var startTime = DateTime.now
   private var units = Units.Default
@@ -72,7 +72,7 @@ class ProgressBar(_total: Int) extends Output {
   /** Set Units size
    *  the default is simple numbers, but you can use Bytes type instead.
    */
-  def setUnits(u: Units) = units = u
+  def setUnits(u: Units): Unit = units = u
 
   /** Set custom format to the drawing bar, default is `[=>-]`
    */

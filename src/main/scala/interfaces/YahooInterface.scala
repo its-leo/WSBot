@@ -16,7 +16,7 @@ import scala.concurrent.duration.Duration
 
 class YahooInterface extends LazyLogging {
 
-  def fetchQuotes(exchange: Exchange) = {
+  def fetchQuotes(exchange: Exchange): Unit = {
 
     val db = Database.forConfig("db")
 
@@ -37,7 +37,7 @@ class YahooInterface extends LazyLogging {
         val stockQuotes = YahooFinance.get(symbols.toArray).asScala.values.map(_.getQuote)
 
         stockQuotes.collect { case a if a != null =>
-          val lastTrade = Option(a.getLastTradeTime.toInstant.atZone(zoneIdOf(exchange))).getOrElse(ZonedDateTime.now(zoneIdOf(exchange)))
+          val lastTrade = a.getLastTradeTime.toInstant.atZone(zoneIdOf(exchange))
           val avgPrice = Option(a.getPriceAvg50).getOrElse(new java.math.BigDecimal(-1))
 
           Quote(stockId = a.getSymbol,
@@ -49,8 +49,6 @@ class YahooInterface extends LazyLogging {
         }
       }
 
-      val oldQuotesSize = Await.result(db.run(quotes.result), Duration.Inf).size
-
       val updateQuery = quotes.insertOrUpdateAll(newQuotes)
       val quotesSize = Await.result(db.run(updateQuery), Duration.Inf).getOrElse(0)
 
@@ -58,7 +56,7 @@ class YahooInterface extends LazyLogging {
       val dateFormat = DateTimeFormatter.ofPattern("HH:mm:ss VV")
       val localTime = dateFormat.format(nowTime)
 
-      logger.info(f"Added ${quotesSize - oldQuotesSize}%4s Quotes for ${exchange.name}%6s at $localTime.")
+      logger.info(f"Added $quotesSize%4s Quotes for ${exchange.name}%6s at $localTime.")
 
     } finally db.close
 

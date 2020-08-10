@@ -16,14 +16,22 @@ import interfaces.traits.ExchangeInterface
 import scala.concurrent.duration.DurationLong
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
-class ExchangeScheduler extends LazyLogging {
+class ExchangeScheduler(exchangeInterface: ExchangeInterface) extends LazyLogging {
 
-  def scheduleFor(exchangeInterface: ExchangeInterface) {
+  private val exchange = exchangeInterface.exchange
 
-    val exchange = exchangeInterface.exchange
+  private val system = ActorSystem(s"${exchange.name}_scheduler")
+  private val quartz = QuartzSchedulerExtension(system)
 
-    val system = ActorSystem(s"${exchange.name}_scheduler")
-    val quartz = QuartzSchedulerExtension(system)
+  def schedule {
+
+    implicit val ec: ExecutionContextExecutor = ExecutionContext.global
+
+    val exchangeDataRunnable = new Runnable {
+      override def run: Unit = exchangeInterface.fetchStocks
+    }
+
+    system.scheduler.schedule(0.seconds, fetchIntervalInDaysFor(exchange).days, exchangeDataRunnable)
 
     //----------------------------------------------------
     //Cron configured schedule, see application.conf
@@ -31,13 +39,7 @@ class ExchangeScheduler extends LazyLogging {
     val yahooInterface = new YahooInterface
     val yahooInterfaceActor = system.actorOf(YahooInterfaceActor.props, "fetch")
 
-    val dateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy - HH:mm:ss VV")
-
-
-    val nowTime = Clock.systemUTC.instant.atZone(timezoneOf(exchange).toZoneId)
-    logger.info(s"Current ${exchange.name} time: " + dateFormat.format(nowTime))
-
-    val expression = s"""${fetchOffsetSeconds.length} */${yahooFetchIntervalInMinutes.length} ${tradingHoursOf(exchange)} ? * ${tradingDaysOf(exchange)}"""
+    val expression = s"""0 */$fetchIntervalInMinutes ${tradingHoursOf(exchange)} ? * ${tradingDaysOf(exchange)}"""
 
     val startDate = quartz.rescheduleJob(
       name = s"${exchange.name}FromYahoo",
@@ -48,20 +50,12 @@ class ExchangeScheduler extends LazyLogging {
       calendar = None,
       timezone = timezoneOf(exchange))
 
+    val dateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy - HH:mm:ss VV")
+
+    val nowTime = Clock.systemUTC.instant.atZone(timezoneOf(exchange).toZoneId)
+    logger.info(s"Current ${exchange.name} time: " + dateFormat.format(nowTime))
+
     val startDateLocal = ZonedDateTime.ofInstant(startDate.toInstant, ZoneId.systemDefault)
     logger.info(s"Scheduler for ${exchange.name} waits until " + dateFormat.format(startDateLocal))
-
-    //----------------------------------------------------
-
-    implicit val ec: ExecutionContextExecutor = ExecutionContext.global
-
-    val waitingInSeconds = (ChronoUnit.SECONDS.between(nowTime, startDateLocal) - fetchOffsetSeconds.length).seconds
-
-    val exchangeDataRunnable = new Runnable {
-      override def run(): Unit = exchangeInterface.fetchStocks
-    }
-
-    system.scheduler.schedule(waitingInSeconds, fetchIntervalInDaysFor(exchange))(exchangeDataRunnable.run())
-
   }
 }

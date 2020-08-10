@@ -5,7 +5,7 @@ import persistence.Classes.Exchange
 import persistence.Tables.Stock
 
 class NasdaqInterface extends ExchangeInterface {
-  override val exchange = Exchange("nasdaq")
+  override val exchange: Exchange = Exchange("nasdaq")
 
   override def mapLinesToStocks(lines: Seq[String]): Seq[Stock] = lines.drop(4).map(_.split('|')).collect {
     case a if a.length == 8 => //No ETF and Line should have 8 columns

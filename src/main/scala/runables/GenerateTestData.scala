@@ -4,7 +4,7 @@ import java.time.ZonedDateTime
 import java.util.concurrent.{Executors, TimeUnit}
 
 import com.typesafe.scalalogging.LazyLogging
-import helper.ConfigHelper.{yahooFetchIntervalInMinutes, zoneIdOf}
+import helper.ConfigHelper.{fetchIntervalInMinutes, zoneIdOf}
 import helper.MathHelper._
 import helper.ProgressBar
 import interfaces.{NasdaqInterface, YahooInterface}
@@ -50,7 +50,7 @@ object GenerateTestData extends App with LazyLogging {
   // CPU load is ~60% when sequential, 100% when threaded
   val runnables = allQuotes.groupBy(_.stockId).map { case (_, b) =>
     new Runnable {
-      override def run = {
+      override def run: Unit = {
 
         var allQuotesPerStock = b.sortBy(_.lastTrade.toEpochSecond).takeRight(20)
 
@@ -59,7 +59,7 @@ object GenerateTestData extends App with LazyLogging {
           val last = allQuotesPerStock.head
 
           val newQuote = last.copy(
-            lastTrade = now.plusMinutes(yahooFetchIntervalInMinutes.length * i),
+            lastTrade = now.plusMinutes(fetchIntervalInMinutes * i),
             price = allQuotesPerStock.map(_.price).generateNext(0.01).setScale(2, RoundingMode.HALF_UP)
           )
 

@@ -10,7 +10,7 @@ object YahooHelper extends LazyLogging {
 
   private val fetchLimit = 500
 
-  def filterKnown(instruments: Seq[Stock]) = {
+  def filterKnown(instruments: Seq[Stock]): Seq[Stock] = {
 
     val idsGrouped = instruments.map(_.id).grouped(fetchLimit)
 

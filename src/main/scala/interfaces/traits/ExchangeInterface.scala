@@ -31,7 +31,7 @@ trait ExchangeInterface extends LazyLogging {
     lazy val fileLastModified = Files.getLastModifiedTime(path).toInstant
     lazy val fileAgeInDays = java.time.Duration.between(fileLastModified, Clock.systemDefaultZone.instant).toDays
 
-    val fileContents = if (!fileExists || fileAgeInDays >= fetchIntervalInDaysFor(exchange).length) {
+    val fileContents = if (!fileExists || fileAgeInDays >= fetchIntervalInDaysFor(exchange)) {
       val source = Source.fromURL(url)
       val lines = try {
         val sourceLines = source.getLines.toSeq
@@ -52,14 +52,12 @@ trait ExchangeInterface extends LazyLogging {
 
       val stocks = TableQuery[Stocks]
 
-      val oldStocksSize = Await.result(db.run(stocks.result), Duration.Inf).size
+      val updateQuery = stocks.insertOrUpdateAll(knownStocks)
+      val updatedStockSize = Await.result(db.run(updateQuery), 1.seconds).getOrElse(0)
 
-      val actions = stocks.insertOrUpdateAll(knownStocks)
-      val stocksSize = Await.result(db.run(actions), 1.seconds).getOrElse(0)
+      val knownQuote = ((updatedStockSize.toDouble) / newStocks.size * 100).round
 
-      val knownQuote = ((stocksSize.toDouble - oldStocksSize) / newStocks.size * 100).round
-
-      logger.info(s"Added ${stocksSize - oldStocksSize} new known / ${newStocks.size} imported stocks ($knownQuote%) for ${exchange.name}.")
+      logger.info(s"Added $updatedStockSize new known / ${newStocks.size} imported stocks ($knownQuote%) for ${exchange.name}.")
 
     } finally db.close
 

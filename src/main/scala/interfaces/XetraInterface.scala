@@ -1,10 +1,11 @@
 package interfaces
 
 import interfaces.traits.ExchangeInterface
+import persistence.Classes.Exchange
 import persistence.Tables.Stock
 
 class XetraInterface extends ExchangeInterface {
-  override val exchangeName: String = "xetra"
+  override val exchange = Exchange("xetra")
 
   override def mapLinesToStocks(lines: Seq[String]): Seq[Stock] = lines.drop(4).map(_.split(';')).collect {
     case a if (a(18) == "CS" || a(18) == "ETF") && !a(7).isEmpty => //CS == Stock, ETF == ...
@@ -16,7 +17,7 @@ class XetraInterface extends ExchangeInterface {
       }
       val name = a(2).replace("O.N.", "").trim
       val etf = a(18) == "ETF"
-      Stock(id, name, exchangeName.toUpperCase, symbol, etf)
+      Stock(id, name, exchange.name.toUpperCase, symbol, etf)
   }
 }
 

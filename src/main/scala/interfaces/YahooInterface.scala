@@ -1,10 +1,11 @@
 package interfaces
 
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.{Clock, ZoneId, ZonedDateTime}
 
 import com.typesafe.scalalogging.LazyLogging
-import helper.ConfigHelper.config
+import helper.ConfigHelper._
+import persistence.Classes.Exchange
 import persistence.PostgresProfile.api._
 import persistence.Tables._
 import yahoofinance.YahooFinance
@@ -15,9 +16,7 @@ import scala.concurrent.duration.Duration
 
 class YahooInterface extends LazyLogging {
 
-  private val fetchLimit = config.getInt("yahoo.fetchLimit")
-
-  def fetchQuotes(exchangeName: String) = {
+  def fetchQuotes(exchange: Exchange) = {
 
     val db = Database.forConfig("db")
 
@@ -25,11 +24,11 @@ class YahooInterface extends LazyLogging {
 
     try {
 
-      val allStocksQuery = TableQuery[Stocks].filter(_.exchange === exchangeName.toUpperCase).result
-      val stocks = Await.result(db.run(allStocksQuery), Duration.Inf)
-      assume(!stocks.isEmpty, s"No stocks for ${exchangeName.toUpperCase} available.")
+      val allStocksQuery = TableQuery[Stocks].filter(_.exchange === exchange.name.toUpperCase).result
 
-      val timezone = config.getString(s"${exchangeName.toLowerCase}.timezone")
+      val stocks = Await.result(db.run(allStocksQuery), Duration.Inf)
+
+      assume(!stocks.isEmpty, s"No stocks for ${exchange.name.toUpperCase} available.")
 
       val symbolsGrouped = stocks.map(_.symbol).grouped(fetchLimit)
 
@@ -37,10 +36,16 @@ class YahooInterface extends LazyLogging {
 
         val stockQuotes = YahooFinance.get(symbols.toArray).asScala.values.map(_.getQuote)
 
-        stockQuotes.map { a =>
-          val lastTrade = a.getLastTradeTime.toInstant.atZone(ZoneId.of(timezone))
-          val priceAvg = Option(a.getPriceAvg50).getOrElse(new java.math.BigDecimal(-1))
-          Quote(a.getSymbol, lastTrade, a.getPrice, priceAvg, a.getVolume, a.getAvgVolume)
+        stockQuotes.collect { case a if a != null =>
+          val lastTrade = Option(a.getLastTradeTime.toInstant.atZone(zoneIdOf(exchange))).getOrElse(ZonedDateTime.now(zoneIdOf(exchange)))
+          val avgPrice = Option(a.getPriceAvg50).getOrElse(new java.math.BigDecimal(-1))
+
+          Quote(stockId = a.getSymbol,
+            lastTrade = lastTrade,
+            price = a.getPrice,
+            avgPrice50 = avgPrice,
+            volume = a.getVolume,
+            avgVolume = a.getAvgVolume)
         }
       }
 
@@ -49,11 +54,11 @@ class YahooInterface extends LazyLogging {
       val updateQuery = quotes.insertOrUpdateAll(newQuotes)
       val quotesSize = Await.result(db.run(updateQuery), Duration.Inf).getOrElse(0)
 
-      val nowTime = ZonedDateTime.now(ZoneId.of(timezone))
+      val nowTime = ZonedDateTime.now(zoneIdOf(exchange))
       val dateFormat = DateTimeFormatter.ofPattern("HH:mm:ss VV")
       val localTime = dateFormat.format(nowTime)
 
-      logger.info(f"Added ${quotesSize - oldQuotesSize}%4s Quotes at $localTime")
+      logger.info(f"Added ${quotesSize - oldQuotesSize}%4s Quotes for ${exchange.name}%6s at $localTime.")
 
     } finally db.close
 

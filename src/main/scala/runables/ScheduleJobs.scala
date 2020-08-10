@@ -11,6 +11,8 @@ object ScheduleJobs extends App with LazyLogging {
   val nasdaqInterface = new NasdaqInterface
   exchangeScheduler.scheduleFor(nasdaqInterface)
 
+  println("-" * 100)
+
   val xetraInterface = new XetraInterface
   exchangeScheduler.scheduleFor(xetraInterface)
 

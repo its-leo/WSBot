@@ -5,6 +5,11 @@ import java.time.ZonedDateTime
 import persistence.PostgresProfile.api._
 import slick.lifted.ForeignKeyQuery
 
+object Classes {
+
+ case class Exchange(name:String) extends AnyVal
+}
+
 object Tables {
 
   //------------------------------------------------

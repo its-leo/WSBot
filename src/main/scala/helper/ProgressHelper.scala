@@ -1,6 +1,5 @@
 package helper
 
-
 import com.github.nscala_time.time.Imports._
 import jline.TerminalFactory
 
@@ -10,85 +9,31 @@ import jline.TerminalFactory
  */
 
 
-/** Output type format, indicate which format wil be used in
- *  the speed box.
- */
-object Units extends Enumeration {
-  type Units = Value
-  val Default, Bytes = Value
-}
-import Units._
-
-/** We're using Output as a trait of ProgressBar, so be able
- *  to mock the tty in the tests(i.e: override `print(...)`)
- */
-trait Output {
-  def print(s: String): Unit = Console.print(s)
-}
-
-object ProgressBar {
-  private val Format = "[=>-]"
-
-  def kbFmt(n: Double): String = {
-    var kb = 1024
-    n match {
-      case x if x >= Math.pow(kb, 4) => "%.2f TB".format(x / Math.pow(kb, 4))
-      case x if x >= Math.pow(kb, 3) => "%.2f GB".format(x / Math.pow(kb, 3))
-      case x if x >= Math.pow(kb, 2) => "%.2f MB".format(x / Math.pow(kb, 2))
-      case x if x >= kb => "%.2f KB".format(x / kb)
-      case _ => "%.0f B".format(n)
-    }
-  }
-}
-
 /** By calling new ProgressBar with Int as a total, you'll
- *  create a new ProgressBar with default configuration.
+ * create a new ProgressBar with default configuration.
  */
-class ProgressBar(_total: Int) extends Output {
-  val total: Int = _total
+class ProgressHelper(val total: Int) {
   var current = 0
-  private var startTime = DateTime.now
-  private var units = Units.Default
-  private var barStart, barCurrent, barCurrentN, barRemain, barEnd = ""
-  var isFinish = false
-  var showBar, showSpeed, showPercent, showCounter, showTimeLeft = true
 
-  format(ProgressBar.Format)
-  
-  /** Add to current value
-   *  
-   *  @param          i the number to add to current value
-   *  @return         current value
+  def now = DateTime.now
+
+  final val startTime = now
+
+  var isFinish = false
+  var showSpeed, showPercent, showCounter, showTimeLeft = true
+
+  /** Add value using += operator
+   *
+   * @param i the number to add to current value
+   * @return current value
    */
-  def add(i: Int): Int = {
+  def +=(i: Int): Int = {
     current += i
-    if (current <= total) draw()
+    if (current <= total) draw
     current
   }
 
-  /** Add value using += operator
-   */
-  def +=(i: Int): Int = add(i)
-
-  /** Set Units size
-   *  the default is simple numbers, but you can use Bytes type instead.
-   */
-  def setUnits(u: Units): Unit = units = u
-
-  /** Set custom format to the drawing bar, default is `[=>-]`
-   */
-  def format(fmt: String) {
-    if (fmt.length >= 5) {
-      val v = fmt.split("").toList
-      barStart = v(0)
-      barCurrent = v(1)
-      barCurrentN = v(2)
-      barRemain = v(3)
-      barEnd = v(4)
-    }
-  }
-
-  private def draw() {
+  private def draw {
     val width = TerminalFactory.get().getWidth()
     var prefix, base, suffix = ""
     // percent box
@@ -98,16 +43,13 @@ class ProgressBar(_total: Int) extends Output {
     }
     // speed box
     if (showSpeed) {
-      val fromStart = (startTime to DateTime.now).millis.toFloat
+      val fromStart = (startTime to now).millis.toFloat
       val speed = current / (fromStart / 1.seconds.millis)
-      suffix += (units match {
-        case Default => "%.0f/s ".format(speed)
-        case Bytes => "%s/s ".format(ProgressBar.kbFmt(speed))
-      })
+      suffix += "%.0f/s ".format(speed)
     }
     // time left box
     if (showTimeLeft) {
-      val fromStart = (startTime to DateTime.now).millis.toFloat
+      val fromStart = (startTime to now).millis.toFloat
       val left = (fromStart / current) * (total - current)
       val dur = Duration.millis(Math.ceil(left).toLong)
       if (dur.seconds > 0) {
@@ -117,53 +59,28 @@ class ProgressBar(_total: Int) extends Output {
     }
     // counter box
     if (showCounter) {
-      prefix += (units match {
-        case Default => "%d / %d ".format(current, total)
-        case Bytes => "%s / %s ".format(ProgressBar.kbFmt(current), ProgressBar.kbFmt(total))
-      })
+      prefix += "%d / %d ".format(current, total)
     }
-    // bar box
-    if (showBar) {
-      val size = width - (prefix + suffix).length - 3
-      if (size > 0) {
-        val curCount = Math.ceil((current.toFloat / total) * size).toInt
-        val remCount = size - curCount
-        base = barStart
-        if (remCount > 0) {
-          base += barCurrent * (curCount - 1) + barCurrentN
-        } else {
-          base += barCurrent * curCount
-        }
-        base += barRemain * remCount + barEnd
-      }
-    }
-    // out
+
     var out = prefix + base + suffix
     if (out.length < width) {
       out += " " * (width - out.length)
     }
-    // print
-    print("\r" + out)
-  }
 
-  import java.time.{Clock, Duration}
-  val startTime2 = Clock.systemUTC.instant
+    Console.print("\r" + out)
+  }
 
   /** Calling finish manually will set current to total and draw
-   *  the last time
+   * the last time
    */
-  def finish() {
-    if (current < total) add(total - current)
-    val now = Clock.systemUTC.instant
-    val d = Duration.between(startTime2, now)
-    println(buildStringFromDuration(d))
+  def finish {
     isFinish = true
-  }
-
-  private def buildStringFromDuration(d:Duration) = {
-    val n = d.getNano
-    val s = d.getSeconds
-    val p = s" | Total: "
-    s"%s%d:%02d:%02d:%09d".format(p,s / 3600, (s % 3600) / 60, (s % 60), n)
+    if (current < total) +=(total - current)
+    val s = (startTime to now).toDurationMillis
+    val millis = s % 1000
+    val second = (s / 1000) % 60
+    val minute = (s / (1000 * 60)) % 60
+    val hour = (s / (1000 * 60 * 60)) % 24
+    println(s" | Total: %d:%02d:%02d:%09d".format(hour, minute, second, millis))
   }
 }

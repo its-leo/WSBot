@@ -2,7 +2,6 @@ package scheduler
 
 import java.time._
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 
 import akka.actor.ActorSystem
 import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension
@@ -13,8 +12,8 @@ import interfaces.actors.YahooInterfaceActor
 import interfaces.actors.YahooInterfaceActor.Param
 import interfaces.traits.ExchangeInterface
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationLong
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 class ExchangeScheduler(exchangeInterface: ExchangeInterface) extends LazyLogging {
 
@@ -24,8 +23,6 @@ class ExchangeScheduler(exchangeInterface: ExchangeInterface) extends LazyLoggin
   private val quartz = QuartzSchedulerExtension(system)
 
   def schedule {
-
-    implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
     val exchangeDataRunnable = new Runnable {
       override def run: Unit = exchangeInterface.fetchStocks

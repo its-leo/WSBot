@@ -1,5 +1,6 @@
 package helper
 
+
 import com.github.nscala_time.time.Imports._
 import jline.TerminalFactory
 
@@ -145,12 +146,24 @@ class ProgressBar(_total: Int) extends Output {
     print("\r" + out)
   }
 
+  import java.time.{Clock, Duration}
+  val startTime2 = Clock.systemUTC.instant
+
   /** Calling finish manually will set current to total and draw
    *  the last time
    */
   def finish() {
     if (current < total) add(total - current)
-    println()
+    val now = Clock.systemUTC.instant
+    val d = Duration.between(startTime2, now)
+    println(buildStringFromDuration(d))
     isFinish = true
+  }
+
+  private def buildStringFromDuration(d:Duration) = {
+    val n = d.getNano
+    val s = d.getSeconds
+    val p = s" | Total: "
+    s"%s%d:%02d:%02d:%09d".format(p,s / 3600, (s % 3600) / 60, (s % 60), n)
   }
 }

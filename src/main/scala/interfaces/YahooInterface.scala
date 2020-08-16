@@ -36,18 +36,25 @@ class YahooInterface extends LazyLogging {
 
         val stockQuotes = YahooFinance.get(symbols.toArray).asScala.values.map(_.getQuote)
 
-        stockQuotes.collect { case a if a != null =>
+        stockQuotes.collect { case a if a != null => try {
+
           val lastTrade = a.getLastTradeTime.toInstant.atZone(zoneIdOf(exchange))
           val avgPrice = Option(a.getPriceAvg50).getOrElse(new java.math.BigDecimal(-1))
 
-          Quote(stockId = a.getSymbol,
+          Some(Quote(stockId = a.getSymbol,
             lastTrade = lastTrade,
             price = a.getPrice,
             avgPrice50 = avgPrice,
             volume = a.getVolume,
-            avgVolume = a.getAvgVolume)
+            avgVolume = a.getAvgVolume))
+        } catch {
+          case e: NullPointerException => {
+            logger.warn(s"Quote for ${a.getSymbol} is corrupt and will not be considered anymore.")
+            None
+          }
         }
-      }
+        }
+      }.collect { case a if (a.isDefined) => a.get }
 
       val updateQuery = quotes.insertOrUpdateAll(newQuotes)
       val quotesSize = Await.result(db.run(updateQuery), Duration.Inf).getOrElse(0)

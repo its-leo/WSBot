@@ -15,10 +15,10 @@ object MathHelper {
 
     def trend: BigDecimal = values.sliding(2).map(a => a.last - a.head).toSeq.mean
 
-    def weightedTrend: BigDecimal = values.takeRight(10).sliding(2).zipWithIndex.map { case (a, b) => (a.last - a.head) * math.sqrt(b) / a.last }.toSeq.mean
+    def weightedTrend(takeLast:Int = 10): BigDecimal = values.takeRight(takeLast).sliding(2).zipWithIndex.map { case (a, b) => (a.last - a.head) * math.sqrt(b) / (a.last + 1)  }.toSeq.mean
 
-    def generateNext(sensibility: Double, rangeByLast: Int = 3, meanByLast: Int = 5): BigDecimal = {
-      val trend = weightedTrend
+    def generateNext(sensibility: Double, rangeByLast: Int = 3, meanByLast: Int = 5, trendByLast:Int = 10): BigDecimal = {
+      val trend = weightedTrend(trendByLast)
       val range = values.takeRight(rangeByLast).mean.toDouble * sensibility
       val mean = values.takeRight(meanByLast).mean
 
@@ -26,4 +26,10 @@ object MathHelper {
     }
 
   }
+
+  implicit class agdDouble(values: Seq[Double]) extends agdBigDecimal(values.map(BigDecimal(_)))
+
+  implicit class agdLong(values: Seq[Long]) extends agdBigDecimal(values.map(BigDecimal(_)))
+
+
 }

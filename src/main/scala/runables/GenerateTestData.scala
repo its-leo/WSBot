@@ -9,7 +9,7 @@ import java.util.concurrent.{Callable, Executors, TimeUnit}
 import com.typesafe.scalalogging.LazyLogging
 import helper.ConfigHelper.{fetchIntervalInMinutes, tradingDaysOf, tradingHoursOf, zoneIdOf}
 import helper.MathHelper._
-import helper.ProgressBar
+import helper.ProgressHelper
 import interfaces.{NasdaqInterface, YahooInterface}
 import persistence.Classes.Exchange
 import persistence.PostgresProfile.api._
@@ -21,10 +21,6 @@ import scala.concurrent.duration.Duration
 import scala.math.BigDecimal.RoundingMode
 
 object GenerateTestData extends App with LazyLogging {
-
-  val endDate = LocalDate.of(2020, 9, 18)
-
-  //-----------------------------------------------------------------------------
 
   InitDatabase.init
 
@@ -49,6 +45,7 @@ object GenerateTestData extends App with LazyLogging {
   val tradingHours = tradingHoursOf(exchange).split('-').take(2).map(_.toInt)
   val (startHour, endHour) = (tradingHours.head, tradingHours.last)
 
+  val endDate = LocalDate.now(zoneId).plusDays(7)
 
   val lastTime = endDate.atTime(endHour, 0)
 
@@ -58,6 +55,7 @@ object GenerateTestData extends App with LazyLogging {
   }
 
   val startDate = dates.head
+
   val firstTime = startDate.atTime(startHour, 0)
 
   val fetchesPerDate = (ChronoUnit.MINUTES.between(firstTime, startDate.atTime(endHour, 0)) / fetchIntervalInMinutes).toInt + 1
@@ -67,12 +65,12 @@ object GenerateTestData extends App with LazyLogging {
   val db = Database.forConfig("db")
 
   val quotes = TableQuery[Quotes]
-  val allQuotes = Await.result(db.run(quotes.result), Duration.Inf)
+  val allQuotes = Await.result(db.run(quotes.result), Duration.Inf)//.filter(_.stockId == "AAPL")
 
   logger.info(s"Generating Quotes...")
 
   val totalCount = dates.size * fetchesPerDate * allQuotes.map(_.stockId).toSet.size
-  val progressBar = new ProgressBar(totalCount)
+  val progressBar = new ProgressHelper(totalCount)
   progressBar.showSpeed = true
 
   val now = ZonedDateTime.now(zoneId)
@@ -89,17 +87,26 @@ object GenerateTestData extends App with LazyLogging {
 
         val newQuotes = dates.flatMap { date =>
 
-          val newVolume = allQuotesPerStock.map(_.volume).generateNext(0.01).toLong
+          val (dateMultiplier, lastDay) = if (dates.last.minusDays(2).isBefore(date)) (0.2, true) else (0.05, false)
 
-          Range(0, fetchesPerDate).map { i =>
+          val newVolume = (allQuotesPerStock.map(_.volume).generateNext(dateMultiplier)).toLong
+
+          (0 until fetchesPerDate).map { i =>
 
             val time = date.atTime(startHour, 0).plusMinutes(i * fetchIntervalInMinutes)
+            val timeMultiplier = if (lastDay && i + 1 == fetchesPerDate) 0.1 else 0.05
+
+            val newPrice = allQuotesPerStock.map(_.price).generateNext(
+              sensibility = timeMultiplier,
+              rangeByLast = (i + 2).max(8),
+              meanByLast = (i).max(5),
+              trendByLast = (i).max(5)).
+              setScale(2, RoundingMode.HALF_UP)
+
             last.copy(
               lastTrade = time.atZone(zoneId),
-              volume = newVolume,
-              price = if (lastTime.equals(time)) {
-                allQuotesPerStock.map(_.price).generateNext(0.01).setScale(2, RoundingMode.HALF_UP) * 1.3
-              } else allQuotesPerStock.map(_.price).generateNext(0.01).setScale(2, RoundingMode.HALF_UP)
+              volume = newVolume / fetchesPerDate * i,
+              price = newPrice
             )
 
           }
@@ -123,6 +130,6 @@ object GenerateTestData extends App with LazyLogging {
 
   if (finished) db.close
 
-  progressBar.finish()
+  progressBar.finish
 
 }

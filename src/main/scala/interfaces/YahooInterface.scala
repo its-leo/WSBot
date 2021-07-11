@@ -32,7 +32,7 @@ class YahooInterface extends LazyLogging {
 
       val stocks = Await.result(db.run(allStocksQuery), Duration.Inf)
 
-      assume(!stocks.isEmpty, s"No stocks for ${exchange.name.toUpperCase} available.")
+      assume(stocks.nonEmpty, s"No stocks for ${exchange.name.toUpperCase} available.")
 
       val symbolsGrouped = stocks.map(_.symbol).toSet.grouped(fetchLimit)
 

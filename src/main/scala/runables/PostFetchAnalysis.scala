@@ -17,7 +17,7 @@ object PostFetchAnalysis extends App {
 
   val quotes = TableQuery[Quotes]
 
-  val stocksQuery = quotes.groupBy(_.stockId).map(_._1) //.filter(_ === "AAPL")
+  val stocksQuery = quotes.groupBy(_.stockId).map(_._1) //.filter(_ === "MSFT")
 
   val stocks = Await.result(db.run(stocksQuery.result), Duration.Inf)
 

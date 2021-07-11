@@ -6,7 +6,7 @@ WSBot is a tool written in Scala that supports retrieving and analyzing publicly
 ![Test_Data](https://github.com/its-leo/WSBot/blob/master/images/generate_test_data.PNG)
 
 
-* Currently, there is a minimal implementation of an analysis based on the moving average volume of a stock
+* Currently, there is a minimal implementation of an analysis based on the moving average volume and price of a stock
 ![DB](https://github.com/its-leo/WSBot/blob/master/images/basic_analysis.PNG?raw=true)
 
 

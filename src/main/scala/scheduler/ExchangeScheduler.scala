@@ -36,7 +36,10 @@ class ExchangeScheduler(exchangeInterface: ExchangeInterface) extends LazyLoggin
     val yahooInterface = new YahooInterface
     val yahooInterfaceActor = system.actorOf(YahooInterfaceActor.props, "fetch")
 
-    val expression = s"""0 */$fetchIntervalInMinutes ${tradingHoursOf(exchange)} ? * ${tradingDaysOf(exchange)}"""
+    val th = tradingHoursOf(exchange).split("-").map(_.toInt)
+    val expression = s"""0 */$fetchIntervalInMinutes ${th.head}-${th.last-1} ? * ${tradingDaysOf(exchange)}"""
+
+
 
     val startDate = quartz.rescheduleJob(
       name = s"${exchange.name}FromYahoo",

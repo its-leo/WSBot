@@ -71,7 +71,6 @@ object GenerateTestData extends App with LazyLogging {
 
   val totalCount = dates.size * fetchesPerDate * allQuotes.map(_.stockId).toSet.size
   val progressBar = new ProgressHelper(totalCount)
-  progressBar.showSpeed = true
 
   val now = ZonedDateTime.now(zoneId)
 

@@ -57,7 +57,7 @@ trait ExchangeInterface extends LazyLogging {
 
       val knownQuote = ((updatedStockSize.toDouble) / newStocks.size * 100).round
 
-      logger.info(s"Added $updatedStockSize new known / ${newStocks.size} imported stocks ($knownQuote%) for ${exchange.name}.")
+      logger.info(s"Added $updatedStockSize known / ${newStocks.size} imported stocks ($knownQuote%) for ${exchange.name}.")
 
     } finally db.close
 

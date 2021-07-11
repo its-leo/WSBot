@@ -6,9 +6,9 @@ WSBot is a tool written in Scala that supports retrieving and analyzing publicly
 ![Test_Data](https://github.com/its-leo/WSBot/blob/master/images/generate_test_data.PNG)
 
 
-* Postgresql is currently used as a DB. Hadoop will be used in the future.
-![DB](https://github.com/its-leo/WSBot/blob/master/images/query_msft.PNG)
-
-
 * Currently, there is a minimal implementation of an analysis based on the moving average volume of a stock
 ![DB](https://github.com/its-leo/WSBot/blob/master/images/basic_analysis.PNG?raw=true)
+
+
+* Postgresql is currently used as a DB. Hadoop will be used in the future.
+![DB](https://github.com/its-leo/WSBot/blob/master/images/query_msft.PNG)

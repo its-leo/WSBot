@@ -1,6 +1,6 @@
 # WSBot
 
-WSBot is a tool written in Scala that supports retrieving and analyzing publicly available stock quotes. 
+WSBot is a tool written in Scala that allows retrieving and analyzing publicly available stock quotes. 
 
 * For test purposes we can also generate stock quotes
 ![Test_Data](https://github.com/its-leo/WSBot/blob/master/images/generate_test_data.PNG)
